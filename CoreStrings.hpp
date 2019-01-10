@@ -7,29 +7,29 @@
 // Minimum C++ version : C++11
 // requires CoreMacros.hpp for the assert and compiler macros
 
+#pragma once
 #ifndef CORE_STRING_HPP_
 #define CORE_STRING_HPP_
 
 #include "CoreMacros.hpp"
 
-#include <string>
-#include <sstream>
-#include <codecvt>
-#include <cstring>
-#include <cstdarg>
-#include <cstdio>
-#include <memory>
+#include <string>   // Needed for std::string
+#include <sstream>  // Needed for splitString
+#include <vector>   // Needed for splitString
+#include <locale>   // Needed for wstring_convert
+#include <codecvt>  // Needed for wstring to string codec
+#include <algorithm>// Needed for std::max
 
-#ifdef COMPILER_MSVC
-    #define NOMINMAX                // Avoid C2039 MSVC compiler error
-#endif
+#include <cstring>  // Needed for sprintf
+#include <cstdarg>  // Needed for the va_list macros
+#include <cinttypes>// Needed for the int32/64 print macros
 
 
 namespace core
 {
     /// Split a string in multiple substrings according to a token.
     /// Example : splitString("a,b,c and d", ',') returns { "a","b","c and d"}.
-    inline std::vector<std::string> splitString( const std::string& std, char token )
+    inline std::vector<std::string> splitString( const std::string& str, char token )
     {
         std::stringstream ss(str);
         std::string element;
@@ -40,19 +40,43 @@ namespace core
     }
 
     /// Convert a std::string to wstring, the right way
-    inline std::wstring s2ws(const std::string& str)
+    inline std::wstring s2ws( const std::string& str )
     {
         using convert_typeX = std::codecvt_utf8<wchar_t>;
         std::wstring_convert<convert_typeX, wchar_t> converterX;
         return converterX.from_bytes(str);
     }
 
-    // Convert a std::wstring to string, the right way
-    inline std::string ws2s(const std::wstring& wstr)
+    /// Convert a std::wstring to string, the right way
+    inline std::string ws2s( const std::wstring& wstr )
     {
         using convert_typeX = std::codecvt_utf8<wchar_t>;
         std::wstring_convert<convert_typeX, wchar_t> converterX;
         return converterX.to_bytes(wstr);
+    }
+
+    /// Print a float's binary representation in hexadecimal to a string.
+    inline std::string float2hex( float x )
+    {
+        static_assert(sizeof( float ) == sizeof( uint32 ), "`float` is not 32 bits wide");
+        union { float f; uint32 i; } f2ui;
+        char buf[sizeof( "0x00000000" )];
+        f2ui.f = x;
+        ON_ASSERT( int result = ) snprintf( buf, sizeof(buf), "0x%" PRIx32 , f2ui.i );
+        CORE_ASSERT( result > 0, "Error in snprintf");
+        return std::string( buf );
+    }
+
+    /// Print a double's binary representation in hexadecimal to a string.
+    inline std::string double2hex( double x )
+    {
+        static_assert(sizeof( double ) == sizeof( uint64 ), "`double` is not 32 bits wide");
+        union { double d; uint64 i; } d2ui;
+        char buf[sizeof( "0x0000000000000000" )];
+        d2ui.d = x;
+        ON_ASSERT (int result = ) snprintf( buf, sizeof(buf), "0x%" PRIx64, d2ui.i );
+        CORE_ASSERT( result > 0, "Error in snprintf");
+        return std::string( buf );
     }
 
     // Printf-to-string functions.
