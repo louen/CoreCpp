@@ -3,6 +3,10 @@ A collection of core macros and nifty functions I use all the time in C++.
 The files should work similarly on Windows (MSVC / mingw / cygwin gcc), MacOS (gcc / clang) and Linux (gcc / clang).
 The target standard at least C++ 11 (and probably will be C++14).
 
+**Table of contents:**
+- [`CoreMacros.hpp`](#coremacroshpp)
+- [`CoreStrings.hpp`](#corestringshpp)
+
 ## Documentation
 
 ### `CoreMacros.hpp`
@@ -12,6 +16,13 @@ This is the base file, which should be included before any other files. This fil
 - Debug macros : assert and error macros, that are useful for debug checks
 
 Additionally, it defines common `typedef`s.
+
+### Compiler switches controlling behaviour 
+Use gcc/clang `-D<SWITCH>` or Visual Studio's `/D<SWITCH>`
+
+- Activate *debug mode* : define any of `DEBUG`, or `_DEBUG` or `CORE_DEBUG`. By default, MSVC defines `_DEBUG` in the Debug configuration. Otherwise, *release mode* is active.
+- Activate *asserts*. Asserts are automatically enabled in debug mode, but can be activated in release mode by definine `CORE_ENABLE_ASSERTS`
+
 
 ### Platform detection and abstraction
 One of the following will be defined depending on the compiler :
@@ -28,9 +39,8 @@ One of the following will be defined depending on the target architecture
 - `ARCH_X86` for 32-bit
 - `ARCH_X64` for 64-bits
 
-An effort is made to ensure consistency of debug macros.
-- `CORE_DEBUG`
-- `CORE_RELEASE`
+Debug and release mode :
+- In debug mode, the `DEBUG` macro is defined. In release, `NDEBUG` and `RELEASE` are defined.
 
 Additionally, there is a `ON_DEBUG()` macro which only activates the code inside on debug builds.
 
@@ -55,7 +65,7 @@ As branch prediction intrinsics are not available with Visual Studio, this macro
 
 Alignment macros (note : these macros are now part of standard c++ and will probably be removed)
 - `ALIGN_OF( var )` : the alignment of a variable 
-- `ALIGNED( decl, align )` Declare a variable with the given alignment. Example usage : `ALIGN( float x, 16);` will declare a float variable with 16-bytes alignment.
+- `ALIGNED( decl, align )` Declare a variable with the given alignment. Example usage : `ALIGN(float x, 16);` will declare a float variable with 16-bytes alignment.
 
 Inline macros to give additionnal hints to the compiler about inlining
 - `ALWAYS_INLINE` : strongest inline requirement possible (possibly even in debug builds)
@@ -63,6 +73,7 @@ Inline macros to give additionnal hints to the compiler about inlining
 - `NO_INLINE`: never inline the function, even in optimized builds.
 
 Export keywords : `DLL_EXPORT` and `DLL_IMPORT` are defined to the corresponding declaration on MSVC and to nothing on other compilers (where they are not needed).
+
 
 
 ### Generic macros
@@ -109,4 +120,15 @@ Finally, `CORE_ERROR( desc )` and `CORE_ERROR_IF( expr, desc )` trigger breakpoi
 
 All unsigned integral types have been typedefed to a shortcut name : `uchar`, `ushort`, `uint` and `ulong`.
 All integral types with explicit bit-size have beed typedefed to a shortcut name  : `int8`, `int16`, `int32` and `int64` for signed types, and `uint8`, `uint16`, `uint32` and `uint64` for unsigned types.
+
+
+## CoreStrings.hpp
+
+This files defines useful functions for string manipulation.
+
+- `splitString(string, token)` takes a string and splits it with the given token as delimiter. It returns a vector of strings.
+- `s2ws` and `ws2s` convert between `std::string` and `std::wstring`, which is useful especially when dealing with Windows API outputs.
+- `float2hex(x)` and `double2hex(x)` returns a string containing the binary representation of the given `float` or `double`, prefixed by `0x`. This is especially useful when debugging floating-point errors.
+- `stringPrintf( string, format, args...)` and `appendPrintf(string, format, args...)` brings the C-style `sprintf` interface to C++ strings. As the name suggest, this functions accepts a `std::string`, a format string and a list of arguments to be printed in the string. The first version returns the printed string, and the seconds appends it to the existing string. Their return value is the size of the printed string, or a negative value if the printing failed.
+
 
