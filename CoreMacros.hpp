@@ -11,8 +11,6 @@
 
 // A good reference : http://sourceforge.net/p/predef/
 
-// Last modified : 2019 01 05
-
 #pragma once
 #ifndef CORE_MACROS_HPP_
 #define CORE_MACROS_HPP_
@@ -270,6 +268,23 @@ namespace compile_time_utils { template<int x> struct size;}
 // Note : there is a way to print it as a warning instead on StackOverflow
 #define STATIC_SIZEOF(TYPE) compile_time_utils::size<sizeof(TYPE)> static_sizeof
 
+// This macro enables floating point exceptions on NaNs, overflows and divisions by zero
+// https://stackoverflow.com/questions/9619014/trapping-quiet-nan
+// call this at the begining of main()
+#if defined COMPILER_MSVC
+# define ENABLE_FPE                     \
+    MACRO_START                         \
+    _clearfp();                         \
+    _controlfp( _controlfp( 0, 0 )      \
+    & ~(_EM_INVALID|_EM_ZERODIVIDE|_EM_OVERFLOW),_MCW_EM);\
+    MACRO_END
+#elif defined COMPILER_GCC || defined COMPILER_CLANG
+# define ENABLE_FPE                     \
+    MACRO_START                         \
+    feenableexcept(FE_DIVBYZERO|FE_INVALID|FE_OVERFLOW);\
+    MACRO_END
+#endif 
+
 // This macro controls if asserts are triggered or not.
 #if defined CORE_DEBUG || defined CORE_USE_ASSERT
 # define CORE_ENABLE_ASSERT
@@ -340,20 +355,5 @@ namespace compile_time_utils { template<int x> struct size;}
         exit(EXIT_FAILURE);        \
     }else{}                        \
     MACRO_END
-
-
-
-// ----------------------------------------------------------------------------
-// Explicit compiler warning disables.
-// ----------------------------------------------------------------------------
-
-// With the most sensitive warning settings, using this file can trigger lots
-// of unwanted warnings, so we explicitly disable them. Add more at your
-// own risk...
-
-#if defined(COMPILER_GCC)
-// Triggered by the typedef in static assert.
-    #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
 
 #endif //CORE_MACROS_HPP__
