@@ -263,10 +263,16 @@ typedef uint64_t    uint64;
 // Debug tools
 // ----------------------------------------------------------------------------
 
-namespace compile_time_utils { template<int x> struct size;}
+namespace compile_time_utils { 
+    template<int x> struct size_printer;
+    template<typename T> struct type_printer;
+}
+
 // This macro will print the size of a type in a compiler error
-// Note : there is a way to print it as a warning instead on StackOverflow
-#define STATIC_SIZEOF(TYPE) compile_time_utils::size<sizeof(TYPE)> static_sizeof
+# define SIZE_AS_ERROR(TYPE) compile_time_utils::size_printer<sizeof(TYPE)> size_print;
+
+// This macro will print the fully deduced type of a variable  in a compiler error
+# define TYPE_AS_ERROR(VAR) compile_time_utils::type_printer<decltype(VAR)> type_print;
 
 // This macro enables floating point exceptions on NaNs, overflows and divisions by zero
 // https://stackoverflow.com/questions/9619014/trapping-quiet-nan
